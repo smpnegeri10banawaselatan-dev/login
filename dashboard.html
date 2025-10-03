@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dashboard</title>
+  <style>
+    body { font-family: Arial, sans-serif; background:#fafafa; margin:0; padding:0; }
+    header { background:#1976d2; color:#fff; padding:16px; text-align:center; }
+    .container { padding:20px; }
+    button { padding:10px 16px; border:none; border-radius:6px; background:#e53935; color:#fff; cursor:pointer; }
+    button:hover { background:#c62828; }
+    table { border-collapse: collapse; width:100%; margin-top:20px; background:#fff; }
+    th, td { border:1px solid #ddd; padding:10px; text-align:left; }
+    th { background:#1976d2; color:#fff; }
+    #search { padding:8px; margin-top:20px; width:100%; border:1px solid #ccc; border-radius:6px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Dashboard</h1>
+  </header>
+  <div class="container">
+    <p>Selamat datang, <strong id="user-display"></strong>!</p>
+    <button onclick="logout()">Logout</button>
+
+    <h2>Data dari Google Sheets</h2>
+    <input type="text" id="search" placeholder="Cari data..." onkeyup="filterTable()" />
+    <table id="data-table">
+      <thead></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <script>
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzWqVst118U_WgGdApm02kYFuvB3MmGiwSCgV1ByXh53a3wUEVGmHmG0sUNLfKeKNEwXw/exec"; // ganti dengan URL Web App kamu
+    const user = sessionStorage.getItem('loggedInUser');
+
+    if (!user) {
+      window.location.href = "login.html";
+    } else {
+      document.getElementById("user-display").innerText = user;
+      loadData();
+    }
+
+    async function loadData() {
+      try {
+        const resp = await fetch(WEB_APP_URL);
+        const json = await resp.json();
+
+        if (json.status === "success") {
+          renderTable(json.data);
+        }
+      } catch (err) {
+        console.error("Gagal load data:", err);
+      }
+    }
+
+    function renderTable(data) {
+      if (!data || data.length === 0) return;
+
+      const tableHead = document.querySelector("#data-table thead");
+      const tableBody = document.querySelector("#data-table tbody");
+
+      tableHead.innerHTML = "";
+      tableBody.innerHTML = "";
+
+      const headers = Object.keys(data[0]);
+      let headRow = "<tr>";
+      headers.forEach(h => {
+        headRow += `<th>${h}</th>`;
+      });
+      headRow += "</tr>";
+      tableHead.innerHTML = headRow;
+
+      data.forEach(row => {
+        let bodyRow = "<tr>";
+        headers.forEach(h => {
+          bodyRow += `<td>${row[h]}</td>`;
+        });
+        bodyRow += "</tr>";
+        tableBody.innerHTML += bodyRow;
+      });
+    }
+
+    function filterTable() {
+      const filter = document.getElementById("search").value.toLowerCase();
+      const rows = document.querySelectorAll("#data-table tbody tr");
+      rows.forEach(row => {
+        const cells = row.querySelectorAll("td");
+        let match = false;
+        cells.forEach(cell => {
+          if (cell.textContent.toLowerCase().includes(filter)) {
+            match = true;
+          }
+        });
+        row.style.display = match ? "" : "none";
+      });
+    }
+
+    function logout() {
+      sessionStorage.removeItem('loggedInUser');
+      window.location.href = "login.html";
+    }
+  </script>
+</body>
+</html>
