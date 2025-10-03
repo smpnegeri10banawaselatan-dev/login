@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Login</title>
+  <style>
+    body { font-family: Arial, sans-serif; background:#f4f4f4; height:100vh; margin:0; display:flex; align-items:center; justify-content:center; }
+    .card { background:#fff; padding:24px; border-radius:12px; box-shadow:0 6px 20px rgba(0,0,0,0.08); width:340px; }
+    input { width:100%; padding:10px 12px; margin:8px 0; border-radius:8px; border:1px solid #ddd; box-sizing:border-box; }
+    button { width:100%; padding:10px; border-radius:8px; border:none; background:#1976d2; color:#fff; font-weight:600; cursor:pointer; }
+    button:disabled { opacity:0.6; cursor:not-allowed; }
+    .error { color:#d32f2f; margin-top:8px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>Login</h2>
+    <input id="username" placeholder="Username" autocomplete="username" />
+    <input id="password" type="password" placeholder="Password" autocomplete="current-password" />
+    <button id="btn-login" onclick="login()">Masuk</button>
+    <p class="error" id="error"></p>
+  </div>
+
+  <script>
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzWqVst118U_WgGdApm02kYFuvB3MmGiwSCgV1ByXh53a3wUEVGmHmG0sUNLfKeKNEwXw/exec"; // ganti dengan URL Web App kamu
+
+    async function login() {
+      const username = document.getElementById("username").value.trim();
+      const password = document.getElementById("password").value;
+      const errorEl = document.getElementById("error");
+      errorEl.textContent = "";
+
+      if (!username || !password) {
+        errorEl.textContent = "Masukkan username dan password.";
+        return;
+      }
+
+      document.getElementById("btn-login").disabled = true;
+      try {
+        const body = new URLSearchParams();
+        body.append('username', username);
+        body.append('password', password);
+
+        const resp = await fetch(WEB_APP_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: body.toString()
+        });
+
+        const data = await resp.json();
+        if (data.status === "success") {
+          sessionStorage.setItem('loggedInUser', username);
+          window.location.href = "dashboard.html";
+        } else {
+          errorEl.textContent = data.message || "Login gagal";
+        }
+      } catch (err) {
+        errorEl.textContent = "Terjadi error: " + err.message;
+      } finally {
+        document.getElementById("btn-login").disabled = false;
+      }
+    }
+  </script>
+</body>
+</html>
